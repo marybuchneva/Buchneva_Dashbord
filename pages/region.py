@@ -47,53 +47,21 @@ layout = dbc.Container([
             ], width=8),
             ]),
 
-        html.Br(),
-        dbc.Row([
-                dbc.Col([
-                    html.P("Выберите вид населения (при показателе Численность):")
-                ], width=8),
-                dbc.Col([
-                    dcc.Dropdown(
-                        id='crossfilter-pop2',
-                        options=[{'label': i, 'value': i} for i in Population_types],
-                        value=Population_types[0],
-                        multi=False
-                    )
-                ], width=8),
-            ], id='crossfilter-pop-row2', style={'display': 'block'}, ),
-
-            html.Br(),
-
-            dbc.Row([
-                dbc.Col([
-                    html.P("Выберите возраст (при показателе Занятость населения):")
-                ], width=8),
-                dbc.Col([
-                    dcc.Dropdown(
-                        id='crossfilter-age2',
-                        options=[{'label': i, 'value': i} for i in age_types],
-                        value=age_types[0],
-                        multi=False
-                    )
-                ], width=8),
-            ], id='crossfilter-age-row2', style={'display': 'block'}),
-
-    html.Br(),
-
     html.Br(),
 
     html.Div(
-            dcc.Graph(id='line2'),
-            style={'width': '50%', 'integer': 'left', 'display': 'inline-block'}
-        ),
+        dcc.Graph(id='line4'),
+        style={'width': '100%', 'integer': 'left', 'display': 'inline-block'}
+    ),
     html.Div(
-            dcc.Graph(id='line3'),
-            style={'width': '50%', 'integer': 'right', 'display': 'inline-block'}
-        ),
+        dcc.Graph(id='bar2'),
+        style={'width': '100%', 'display': 'inline-block'}
+    ),
     html.Div(
-            dcc.Graph(id='line4'),
-            style={'width': '50%', 'integer': 'left', 'display': 'inline-block'}
-        ),
+        dcc.Graph(id='line2'),
+        style={'width': '50%', 'integer': 'right', 'display': 'inline-block'}
+    ),
+
     html.Div(
             dcc.Graph(id='line5'),
             style={'width': '50%', 'integer': 'right', 'display': 'inline-block'}
@@ -122,37 +90,35 @@ def update_line2(dist,reg):
     return figure
 
 @callback(
-    Output('line3', 'figure'),
+    Output('bar2', 'figure'),
     [Input('crossfilter-dist2', 'value'),
-     Input('crossfilter-reg2','value'),
-     Input('crossfilter-pop2','value')]
+     Input('crossfilter-reg2','value')]
 )
-def update_line2(dist,reg, pop_type):
-    filtered_data = df_Population[(df_Population['Округ'] == dist)&(df_Population['Субъект']==reg)& (df_Population['Вид']==pop_type)].sort_values(by='Год',ascending=True)
-    figure = px.line(
+def update_bar2(dist,reg):
+    filtered_data = df_Population[(df_Population['Округ'] == dist)&(df_Population['Субъект']==reg)].sort_values(by='Год',ascending=True)
+    figure = px.bar(
         filtered_data,
-        x="Год",
+        x='Год',
         y='Численность населения',
-        title="Динамика Численности населения",
-        markers=True,
+        color='Вид'
     )
-    figure.update_xaxes(type='category')
+    # figure.update_xaxes(type='category')
     return figure
 
 @callback(
     Output('line4', 'figure'),
     [Input('crossfilter-dist2', 'value'),
-     Input('crossfilter-reg2','value'),
-     Input('crossfilter-age2','value')]
+     Input('crossfilter-reg2','value')]
 )
-def update_line2(dist,reg,age_type):
-    filtered_data = df_Employment[(df_Employment['Округ'] == dist)&(df_Employment['Субъект']==reg) & (df_Employment['Возраст']==age_type)].sort_values(by='Год',ascending=True)
+def update_line4(dist,reg):
+    filtered_data = df_Employment[(df_Employment['Округ'] == dist)&(df_Employment['Субъект']==reg)].sort_values(by='Год',ascending=True)
     figure = px.line(
         filtered_data,
         x="Год",
         y='Уровень занятости',
         title="Динамика уровня Занятости населения",
         markers=True,
+        color='Возраст',
     )
     figure.update_xaxes(type='category')
     return figure
