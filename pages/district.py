@@ -47,39 +47,7 @@ layout = dbc.Container([
                 id='crossfilter-ind1'
             )
         ]),
-    html.Br(),
-
-            html.Br(),
-            dbc.Row([
-                dbc.Col([
-                    html.P("Выберите вид населения (при показателе Численность)")
-                ], width=10),
-                dbc.Col([
-                    dcc.Dropdown(
-                        id='crossfilter-pop1',
-                        options=[{'label': i, 'value': i} for i in Population_types],
-                        value=Population_types[0],
-                        # возможность множественного выбора
-                        multi=False
-                    )
-                ], width=8),
-            ], id='crossfilter-pop-row1', style={'display': 'block'}, ),
-
-            html.Br(),
-
-            dbc.Row([
-                dbc.Col([
-                    html.P("Выберите возраст (при показателе Занятость населения)")
-                ], width=10),
-                dbc.Col([
-                    dcc.Dropdown(
-                        id='crossfilter-age1',
-                        options=[{'label': i, 'value': i} for i in age_types],
-                        value=age_types[0],
-                        multi=False
-                    )
-                ], width=8),
-            ], id='crossfilter-age-row1', style={'display': 'block'}),
+    # html.Br(),
 
         html.Br(),
         html.Div(
@@ -96,12 +64,29 @@ layout = dbc.Container([
                 max=df_Employment_MSP['Год'].max(),
                 value=2020,
                 step=None,
+                included=False,
                 marks={str(year):
                            str(year) for year in df_Employment_MSP['Год'].unique()}
             ),
+
             style={'width': '95%', 'padding': '0px 20px 20px 20px'}
         ),
 
+            html.Br(),
+
+            dbc.Row([
+                dbc.Col([
+                    html.P("Выберите возраст (при показателе Занятость населения)")
+                ], width=10),
+                dbc.Col([
+                    dcc.Dropdown(
+                        id='crossfilter-age1',
+                        options=[{'label': i, 'value': i} for i in age_types],
+                        value=age_types[0],
+                        multi=False
+                    )
+                ], width=8),
+            ], id='crossfilter-age-row1', style={'display': 'block'}),
     dbc.Col([
         dbc.Row([
             html.H5("ТОП-5 округов",style={'textAlign':'center'}),
@@ -111,7 +96,22 @@ layout = dbc.Container([
     ],),
         ],
        ),
+        dbc.Row([
+            dbc.Col([
+                html.P("Выберите вид населения (при показателе Численность)")
+            ], width=10),
+            dbc.Col([
+                dcc.Dropdown(
+                    id='crossfilter-pop1',
+                    options=[{'label': i, 'value': i} for i in Population_types],
+                    value=Population_types[0],
+                    # возможность множественного выбора
+                    multi=False
+                )
+            ], width=8),
+        ], id='crossfilter-pop-row1', style={'display': 'block'}, ),
 
+        html.Br(),
     html.Div(
         dcc.Graph(id='bar'),
         style={'width': '100%', 'display': 'inline-block'}
@@ -126,34 +126,57 @@ layout = dbc.Container([
 @callback(
     Output('line1', 'figure'),
     [Input('crossfilter-ind1', 'value'),
-     Input('crossfilter-pop1','value'),
-     Input('crossfilter-age1','value'),
      Input('crossfilter-dist1','value')]
 )
-def update_line(indication,popul_type,age_type,dist):
+def update_line(indication,dist):
     if indication =='Занятость МСП':
         current_df = df_Employment_MSP_districts
         y_label ='Занятость МСП'
         filtered_data = current_df[(current_df['Округ'] == dist)].sort_values(by='Год',ascending=True)
+        figure = px.line(
+            filtered_data,
+            x="Год",
+            y=y_label,
+            title="Динамика в выбранном федеральном округе",
+            markers=True,
+        )
     elif indication == 'Уровень занятости':
         current_df=df_Employment_district
         y_label='Уровень занятости'
-        filtered_data = current_df[(current_df['Округ'] == dist) & (current_df['Возраст'] == age_type)].sort_values(by='Год',ascending=True)
+        filtered_data = current_df[(current_df['Округ'] == dist)].sort_values(by='Год',ascending=True)
+        figure = px.line(
+            filtered_data,
+            x="Год",
+            y=y_label,
+            title="Динамика в выбранном федеральном округе",
+            markers=True,
+            color='Возраст'
+        )
+
     elif indication =='Уровень безработицы':
         current_df = df_Unemployment_district
         y_label = 'Уровень безработицы'
         filtered_data = current_df[(current_df['Округ'] == dist)].sort_values(by='Год',ascending=True)
+        figure = px.line(
+            filtered_data,
+            x="Год",
+            y=y_label,
+            title="Динамика в выбранном федеральном округе",
+            markers=True,
+        )
+
     elif indication == 'Численность населения':
         current_df = df_Population_district
         y_label = 'Численность населения'
-        filtered_data = current_df[(current_df['Округ'] == dist)&(current_df['Вид']==popul_type)].sort_values(by='Год',ascending=True)
-    figure = px.line(
-        filtered_data,
-        x="Год",
-        y=y_label,
-        title="Динамика в выбранном федеральном округе",
-        markers=True,
-    )
+        filtered_data = current_df[(current_df['Округ'] == dist)&(current_df['Вид']=='все население')].sort_values(by='Год',ascending=True)
+        figure = px.line(
+            filtered_data,
+            x="Год",
+            y=y_label,
+            title="Динамика в выбранном федеральном округе",
+            markers=True,
+        )
+
     figure.update_xaxes(type='category')
     return figure
 
@@ -161,11 +184,10 @@ def update_line(indication,popul_type,age_type,dist):
     Output('tabletop1', 'children'),
     [Input('crossfilter-ind1', 'value'),
     Input('crossfilter-year1', 'value'),
-    Input('crossfilter-pop1','value'),
     Input('crossfilter-age1','value'),
      Input('crossfilter-dist1', 'value') ]
 )
-def update_table(indication, year, popul_type,age_type,dist):
+def update_table(indication, year,age_type,dist):
     if indication == 'Занятость МСП':
         current_df = df_Employment_MSP
         filtred_data = current_df[(current_df['Год'] == year) & (current_df['Округ'] == dist) &
@@ -179,7 +201,7 @@ def update_table(indication, year, popul_type,age_type,dist):
                                   (current_df['Субъект'])].sort_values(by=indication, ascending=False)
     elif indication == 'Численность населения':
         current_df = df_Population
-        filtred_data = current_df[(current_df['Год'] == year) & (current_df['Округ'] == dist) & (current_df['Вид']==popul_type) &
+        filtred_data = current_df[(current_df['Год'] == year) & (current_df['Округ'] == dist) & (current_df['Вид']=='все население') &
                                   (current_df['Субъект'])].sort_values(by=indication, ascending=False)
     # filtred_data = current_df[(current_df['Год'] == year) & (current_df['Округ']!='Российская Федерация') &
     #     (current_df['Округ'])].sort_values(by=indication, ascending=False)
