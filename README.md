@@ -6,3 +6,8 @@
 <br> В данном дашборде показана динамика показателей по всей России в целом, по каждому федеральному округу и по каждому региону.
 ## Как развернуть? ##
 <br>Чтобы развернуть проект, стоит скачать код, сохраняя иерархию папок.
+<br>Также стоит установить библиотеки dash, pandas, dash_bootstrap_components, plotly.express.
+<br> pip install dash
+<br> pip install pandas
+<br> pip install dash-bootstrap-components
+<br> pip install pip install plotly-express
