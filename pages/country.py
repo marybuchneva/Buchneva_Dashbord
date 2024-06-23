@@ -31,8 +31,17 @@ layout = dbc.Container([
                 id='crossfilter-ind'
             )
         ]),
-    html.Br(),
-    dbc.Row([
+
+        html.Br(),
+
+        html.Div(
+            dcc.Graph(id='line'),
+            style={'width': '100%', 'integer': 'right', 'display': 'inline-block'}
+        ),
+
+        html.Br(),
+
+        dbc.Row([
             dbc.Col([
                 html.P("Выберите вид населения (при показателе Численность)")
             ], width=10),
@@ -66,11 +75,6 @@ layout = dbc.Container([
         html.Br(),
 
         html.Div(
-            dcc.Graph(id='line'),
-            style={'width': '100%', 'integer': 'right', 'display': 'inline-block'}
-        ),
-
-        html.Div(
             dcc.Graph(id='choropleth'),
             style={'width': '100%', 'display': 'inline-block'}
         ),
@@ -83,6 +87,7 @@ layout = dbc.Container([
                 step=None,
                 marks={str(year):
                            str(year) for year in df_Employment_MSP['Год'].unique()},
+                included=False,
             )],
             style={'width': '95%', 'padding': '0px 20px 20px 20px'}
         ),
@@ -99,39 +104,59 @@ layout = dbc.Container([
 
 @callback(
     Output('line', 'figure'),
-    [Input('crossfilter-ind', 'value'),
-     Input('crossfilter-pop','value'),
-     Input('crossfilter-age','value')]
+    Input('crossfilter-ind', 'value')
 )
-def update_line(indication,popul_type,age_type):
+def update_line(indication):
     if indication =='Занятость МСП':
         current_df = df_Employment_MSP_districts
         y_label ='Занятость МСП'
-        filtered_data = current_df[(current_df['Округ'] == 'Российская Федерация')].sort_values(by='Год',
-                                                                                                ascending=True)
+        filtered_data = current_df[(current_df['Округ'] == 'Российская Федерация')].sort_values(by='Год',ascending=True)
+        figure = px.line(
+            filtered_data,
+            x="Год",
+            y=y_label,
+            title="Динамика в России",
+            markers=True,
+        )
+
     elif indication == 'Уровень занятости':
         current_df=df_Employment_district
         y_label='Уровень занятости'
-        filtered_data = current_df[(current_df['Округ'] == 'Российская Федерация') & (current_df['Возраст'] == age_type)].sort_values(by='Год',ascending=True)
+        filtered_data = current_df[current_df['Округ'] == 'Российская Федерация'].sort_values(by='Год',ascending=True)
+        figure = px.line(
+            filtered_data,
+            x="Год",
+            y=y_label,
+            title="Динамика в России",
+            markers=True,
+            color='Возраст',
+        )
+
 
     elif indication =='Уровень безработицы':
         current_df = df_Unemployment_district
         y_label = 'Уровень безработицы'
-        filtered_data = current_df[(current_df['Округ'] == 'Российская Федерация')].sort_values(by='Год',
-                                                                                                ascending=True)
+        filtered_data = current_df[(current_df['Округ'] == 'Российская Федерация')].sort_values(by='Год',ascending=True)
+        figure = px.line(
+            filtered_data,
+            x="Год",
+            y=y_label,
+            title="Динамика в России",
+            markers=True,
+        )
 
     elif indication == 'Численность населения':
         current_df = df_Population_district
         y_label = 'Численность населения'
-        filtered_data = current_df[(current_df['Округ'] == 'Российская Федерация')&(current_df['Вид']==popul_type)].sort_values(by='Год',
-                                                                                                                                ascending=True)
-    figure = px.line(
-        filtered_data,
-        x="Год",
-        y=y_label,
-        title="Динамика в России",
-        markers=True,
-    )
+        filtered_data = current_df[(current_df['Округ'] == 'Российская Федерация')&(current_df['Вид']=='все население')].sort_values(by='Год',ascending=True)
+        figure = px.line(
+            filtered_data,
+            x="Год",
+            y=y_label,
+            title="Динамика в России",
+            markers=True,
+        )
+
     figure.update_xaxes(type='category')
     return figure
 
@@ -239,7 +264,7 @@ def update_table(indication, year, popul_type,age_type):
                                   (current_df['Округ'])].sort_values(by=indication, ascending=False)
     elif indication == 'Численность населения':
         current_df = df_Population_district
-        filtred_data = current_df[(current_df['Год'] == year) & (current_df['Округ'] != 'Российская Федерация') & (current_df['Вид']==popul_type) &
+        filtred_data = current_df[(current_df['Год'] == year) & (current_df['Округ'] != 'Российская Федерация') & (current_df['Вид']=='все население') &
                                   (current_df['Округ'])].sort_values(by=indication, ascending=False)
     # filtred_data = current_df[(current_df['Год'] == year) & (current_df['Округ']!='Российская Федерация') &
     #     (current_df['Округ'])].sort_values(by=indication, ascending=False)
