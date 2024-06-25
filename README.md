@@ -10,5 +10,5 @@
 <br> pip install dash
 <br> pip install pandas
 <br> pip install dash-bootstrap-components
-<br> pip install pip install plotly-express
+<br> pip install plotly-express
 <br>Если в vs code возникает ошибка, связанная с openpyxl, запустить main.py через командную строку
